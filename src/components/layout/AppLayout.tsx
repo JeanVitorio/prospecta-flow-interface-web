@@ -26,7 +26,6 @@ const nav: NavItem[] = [
   { to: "/teams", label: "Times", icon: Network, roles: ["leader","manager"] },
   { to: "/services", label: "Serviços", icon: Briefcase, roles: ["leader"] },
   { to: "/finance", label: "Financeiro", icon: Wallet, roles: ["leader"] },
-  { to: "/studio", label: "Studio", icon: Camera, roles: ["leader"] },
   { to: "/time", label: "Tempo", icon: Timer, roles: ["leader","manager","collaborator"] },
   // Comercial
   { to: "/sales/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["commercial"] },
