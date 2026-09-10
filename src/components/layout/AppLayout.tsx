@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { Bot, LayoutDashboard, LogOut, Menu, Moon, Sun, Target, UserCircle2, Users } from "lucide-react";
+import { Bot, Database, LayoutDashboard, LogOut, Menu, Moon, Sun, Target, UserCircle2, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/Logo";
