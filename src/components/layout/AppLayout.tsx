@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { LayoutDashboard, KanbanSquare, BarChart3, Users, UserCog, Timer, Search, Moon, Sun, Database, Sparkles, LogOut, Wallet, Network, UserCircle2, Menu, UserPlus, Briefcase, Camera, Target, CalendarDays } from "lucide-react";
+import { Bot, LayoutDashboard, LogOut, Menu, Moon, Sun, Target, UserCircle2, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/Logo";
 import { useTheme } from "@/components/ThemeProvider";
@@ -9,67 +10,36 @@ import { useApp } from "@/store/AppStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/AuthContext";
-import { useSearch } from "@/context/SearchContext";
-import { NotificationsBell } from "@/components/NotificationsBell";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-type NavItem = { to: string; label: string; icon: any; end?: boolean; roles: Array<"leader"|"manager"|"collaborator"|"commercial"> };
+type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean };
 
 const nav: NavItem[] = [
-  // Operacional
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true, roles: ["leader","manager","collaborator"] },
-  { to: "/kanban", label: "Kanban", icon: KanbanSquare, roles: ["leader","manager","collaborator"] },
-  { to: "/reports", label: "Relatórios", icon: BarChart3, roles: ["leader","manager","collaborator"] },
-  { to: "/clients", label: "Clientes", icon: Users, roles: ["leader","manager","collaborator"] },
-  { to: "/team", label: "Equipe", icon: UserCog, roles: ["leader","manager"] },
-  { to: "/collaborators", label: "Colaboradores", icon: UserPlus, roles: ["leader","manager"] },
-  { to: "/teams", label: "Times", icon: Network, roles: ["leader","manager"] },
-  { to: "/services", label: "Serviços", icon: Briefcase, roles: ["leader"] },
-  { to: "/finance", label: "Financeiro", icon: Wallet, roles: ["leader"] },
-  { to: "/time", label: "Tempo", icon: Timer, roles: ["leader","manager","collaborator"] },
-  // Comercial
-  { to: "/sales/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["commercial"] },
-  { to: "/sales", label: "Funil de Vendas", icon: Target, roles: ["commercial","leader","manager"] },
-  { to: "/leads", label: "Leads", icon: Target, roles: ["commercial","leader","manager"] },
-  { to: "/sales/agenda", label: "Agenda", icon: CalendarDays, roles: ["commercial","leader","manager"] },
+  { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/bots", label: "Bots", icon: Bot },
+  { to: "/sales", label: "Funil de Vendas", icon: Target },
+  { to: "/leads", label: "Leads", icon: Users },
 ];
 
 export function AppLayout() {
   const { theme, toggle } = useTheme();
   const { currentUser, usingBackend } = useApp();
   const { logout } = useAuth();
-  const { query, setQuery } = useSearch();
   const location = useLocation();
-  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  // Mostrar busca apenas onde faz sentido (Kanban e Clientes)
-  const showSearch = location.pathname === "/kanban" || location.pathname === "/clients";
-
-  function handleSearchKey(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && query.trim()) navigate("/kanban");
-  }
 
   const SidebarContent = (
     <>
         <div className="flex items-center gap-3 px-2 mb-8">
           <Logo size={36} />
           <div>
-            <h1 className="font-display font-bold text-lg leading-none">JVS</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Tech</p>
+            <h1 className="font-display font-bold text-lg leading-none">Prospecta Flow</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Robot</p>
           </div>
         </div>
 
         <nav className="space-y-1 flex-1">
-          {nav.filter(n => {
-            const r = currentUser.role as any;
-            const role: "leader"|"manager"|"collaborator"|"commercial" =
-              r === "leader" ? "leader"
-              : r === "commercial" ? "commercial"
-              : currentUser.is_manager ? "manager"
-              : "collaborator";
-            return n.roles.includes(role);
-          }).map(({ to, label, icon: Icon, end }) => (
+          {nav.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
@@ -115,28 +85,14 @@ export function AppLayout() {
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)}>
             <Menu className="w-5 h-5" />
           </Button>
-          <div className="flex-1 max-w-sm">
-            {showSearch && (
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={handleSearchKey}
-                  placeholder="Buscar tarefas, clientes, palavras-chave…"
-                  className="w-full h-9 bg-muted/50 border border-border rounded-lg pl-10 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring transition"
-                />
-              </div>
-            )}
-          </div>
+          <div className="flex-1" />
           <div className="flex items-center gap-2 sm:gap-3">
             <Badge variant="outline" className="hidden md:inline-flex gap-1 border-accent/40 text-accent">
-              <Sparkles className="w-3 h-3" /> {currentUser.role === "leader" ? "Líder" : (currentUser as any).role === "commercial" ? "Comercial" : currentUser.is_manager ? "Gerente" : "Colaborador"}
+              <Bot className="w-3 h-3" /> {currentUser.role === "leader" ? "Administrador" : currentUser.role === "commercial" ? "Comercial" : currentUser.is_manager ? "Gerente" : "Usuário"}
             </Badge>
             <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema">
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
-            <NotificationsBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-xs font-semibold shadow-glow hover:scale-105 transition overflow-hidden">

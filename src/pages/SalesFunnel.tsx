@@ -87,7 +87,6 @@ export default function SalesFunnel() {
   const [stageForm, setStageForm] = useState<Partial<Stage> | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const isLeader = user?.role === "leader";
-  const commercialUsers = users.filter((u) => u.role === "commercial");
 
   async function load() {
     let leadQuery = supabase.from("leads").select("*").order("created_at", { ascending: false });
@@ -107,8 +106,8 @@ export default function SalesFunnel() {
       });
       setStages([...unique.values()].sort((a, b) => a.position - b.position));
     }
-    if (l.data) setLeads(l.data as any);
-    if (a.data) setActivities(a.data as any);
+    if (l.data) setLeads(l.data as Lead[]);
+    if (a.data) setActivities(a.data as Activity[]);
   }
   useEffect(() => { load(); }, [ownerFilter, user?.id, isLeader]);
 
@@ -139,10 +138,10 @@ export default function SalesFunnel() {
       ...form,
       name: form.name?.trim() || form.company?.trim() || form.email?.trim() || "Lead sem nome",
       stage_id: form.stage_id || firstStage?.id,
-      owner_id: form.owner_id || user?.id,
+      owner_id: isLeader ? form.owner_id || user?.id : user?.id,
       estimated_value: Number(form.estimated_value || 0),
       time_spent_seconds: Number(form.time_spent_seconds || 0),
-    } as any;
+    };
     const { error } = await supabase.from("leads").insert(payload);
     if (error) return toast.error(error.message);
     toast.success("Lead criado");
@@ -172,12 +171,12 @@ export default function SalesFunnel() {
       niche: leadDraft.niche?.trim() || null,
       estimated_value: Number(leadDraft.estimated_value || 0),
       stage_id: leadDraft.stage_id ?? null,
-      owner_id: leadDraft.owner_id ?? null,
+      owner_id: isLeader ? leadDraft.owner_id ?? null : user?.id ?? null,
       notes: leadDraft.notes?.trim() || null,
       next_followup_at: leadDraft.next_followup_at ?? null,
       time_spent_seconds: Number(leadDraft.time_spent_seconds || 0),
     };
-    const { data, error } = await supabase.from("leads").update(payload as any).eq("id", openLead.id).select().single();
+    const { data, error } = await supabase.from("leads").update(payload).eq("id", openLead.id).select().single();
     if (error) return toast.error(error.message);
     setOpenLead(data as Lead);
     setLeadDraft(data as Lead);
@@ -235,14 +234,16 @@ export default function SalesFunnel() {
         actions={
           <div className="flex flex-wrap gap-2">
           <PeriodFilter value={period} onChange={setPeriod} />
-          <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-            <SelectTrigger className="w-[190px] h-9"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {isLeader && <SelectItem value="all">Todos os comerciais</SelectItem>}
-              <SelectItem value="mine">Meus leads</SelectItem>
-              {commercialUsers.map((u) => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          {isLeader && (
+            <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+              <SelectTrigger className="w-[190px] h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os usuários</SelectItem>
+                <SelectItem value="mine">Meus leads</SelectItem>
+                {users.map((u) => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
           {isLeader && <Button variant="outline" onClick={() => setStageForm({ color: "#6366f1", position: stages.length })} className="gap-2"><Plus className="w-4 h-4" /> Nova etapa</Button>}
           <Dialog open={openNew} onOpenChange={setOpenNew}>
             <DialogTrigger asChild><Button className="gap-2"><Plus className="w-4 h-4" /> Novo lead</Button></DialogTrigger>
@@ -264,18 +265,18 @@ export default function SalesFunnel() {
                 <div className="grid grid-cols-2 gap-2">
                   <div><Label>Tempo gasto (min)</Label><Input type="number" value={Math.round((form.time_spent_seconds ?? 0) / 60)} onChange={e => setForm(f => ({ ...f, time_spent_seconds: Number(e.target.value) * 60 }))} /></div>
                   <div><Label>Comercial responsável</Label>
-                    <Select value={form.owner_id ?? user?.id ?? ""} onValueChange={v => setForm(f => ({ ...f, owner_id: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {/* Próprio usuário logado sempre disponível */}
-                        {user && !commercialUsers.find(u => u.id === user.id) && (
-                          <SelectItem value={user.id}>{user.name} (eu)</SelectItem>
-                        )}
-                        {commercialUsers.map(u => (
-                          <SelectItem key={u.id} value={u.id}>{u.id === user?.id ? `${u.name} (eu)` : u.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {isLeader ? (
+                      <Select value={form.owner_id ?? user?.id ?? ""} onValueChange={v => setForm(f => ({ ...f, owner_id: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {users.map(u => (
+                            <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input value={user?.name || user?.email || ""} disabled />
+                    )}
                   </div>
                 </div>
                 <div><Label>Estágio</Label>

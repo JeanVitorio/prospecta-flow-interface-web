@@ -33,8 +33,7 @@ async function loadAppUser(supaUser: SupaUser): Promise<AuthUser> {
     supabase.from("user_roles").select("role").eq("user_id", supaUser.id),
   ]);
   if (rolesError) console.error("[AuthContext] user_roles query error:", rolesError);
-  console.log("[AuthContext] roles raw:", roles, "for user:", supaUser.email);
-  const roleList = (roles ?? []).map((r: any) => r.role as AppRole);
+  const roleList = (roles ?? []).map((roleRow) => roleRow.role as AppRole);
   const role: AppRole = roleList.includes("leader")
     ? "leader"
     : roleList.includes("manager")

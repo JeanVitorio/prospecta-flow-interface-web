@@ -10,24 +10,11 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { NotificationsProvider } from "@/context/NotificationsContext";
 import { SearchProvider } from "@/context/SearchContext";
 import Dashboard from "./pages/Dashboard";
-import Kanban from "./pages/Kanban";
-import Reports from "./pages/Reports";
-import Clients from "./pages/Clients";
-import ClientDetail from "./pages/ClientDetail";
-import Team from "./pages/Team";
-import TeamMemberDetail from "./pages/TeamMemberDetail";
-import TeamsDB from "./pages/TeamsDB";
-import Collaborators from "./pages/Collaborators";
-import Finance from "./pages/Finance";
-import ReportDetail from "./pages/ReportDetail";
-import TimeTracking from "./pages/TimeTracking";
+import Bots from "./pages/Bots";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
-import Services from "./pages/Services";
 import SalesFunnel from "./pages/SalesFunnel";
-import SalesAgenda from "./pages/SalesAgenda";
 import Leads from "./pages/Leads";
-import SalesDashboard from "./pages/SalesDashboard";
 import NotFound from "./pages/NotFound.tsx";
 import type { ReactNode } from "react";
 
@@ -41,8 +28,6 @@ function Protected({ children }: { children: ReactNode }) {
 }
 
 function HomeRoute() {
-  const { user } = useAuth();
-  if (user?.role === "commercial") return <Navigate to="/sales/dashboard" replace />;
   return <Dashboard />;
 }
 
@@ -61,22 +46,9 @@ const App = () => (
                     <Route path="/login" element={<Login />} />
                     <Route element={<Protected><AppLayout /></Protected>}>
                       <Route path="/" element={<HomeRoute />} />
-                      <Route path="/kanban" element={<Kanban />} />
-                      <Route path="/reports" element={<Reports />} />
-                      <Route path="/reports/:type" element={<ReportDetail />} />
-                      <Route path="/clients" element={<Clients />} />
-                      <Route path="/clients/:id" element={<ClientDetail />} />
-                      <Route path="/services" element={<Services />} />
-                      <Route path="/team" element={<Team />} />
-                      <Route path="/team/:id" element={<TeamMemberDetail />} />
-                      <Route path="/teams" element={<TeamsDB />} />
-                      <Route path="/collaborators" element={<Collaborators />} />
-                      <Route path="/finance" element={<Finance />} />
-                      <Route path="/time" element={<TimeTracking />} />
+                      <Route path="/bots" element={<Bots />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/sales" element={<SalesFunnel />} />
-                      <Route path="/sales/agenda" element={<SalesAgenda />} />
-                      <Route path="/sales/dashboard" element={<SalesDashboard />} />
                       <Route path="/leads" element={<Leads />} />
                     </Route>
                     <Route path="*" element={<NotFound />} />

@@ -4,7 +4,7 @@ export function Logo({ size = 32, className = "" }: { size?: number; className?:
   return (
     <img
       src={logo}
-      alt="JVS Tech"
+      alt="Prospecta Flow Robot"
       width={size}
       height={size}
       className={`rounded-lg shadow-glow ${className}`}

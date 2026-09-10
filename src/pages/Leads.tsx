@@ -41,6 +41,9 @@ interface LeadStage {
   is_lost: boolean;
 }
 
+const errorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "Operação não concluída.";
+
 export default function Leads() {
   const { user } = useAuth();
   const { users } = useApp();
@@ -85,8 +88,8 @@ export default function Leads() {
       const { data, error } = await query;
       if (error) throw error;
       setLeads(data || []);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(errorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -100,8 +103,8 @@ export default function Leads() {
       if (data?.length && !form.stage_id) {
         setForm(f => ({ ...f, stage_id: data[0].id }));
       }
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(errorMessage(err));
     }
   }
 
@@ -152,7 +155,7 @@ export default function Leads() {
         source: form.source?.trim() || null,
         estimated_value: form.estimated_value || 0,
         stage_id: form.stage_id,
-        owner_id: form.owner_id || null,
+        owner_id: isLeader ? form.owner_id || null : user?.id || null,
         notes: form.notes?.trim() || null,
         next_followup_at: form.next_followup_at || null,
       };
@@ -169,8 +172,8 @@ export default function Leads() {
       
       setIsOpen(false);
       loadLeads();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(errorMessage(err));
     }
   }
 
@@ -181,8 +184,8 @@ export default function Leads() {
       if (error) throw error;
       toast.success("Lead excluído");
       loadLeads();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(errorMessage(err));
     }
   }
 
@@ -387,20 +390,18 @@ export default function Leads() {
               </div>
               <div>
                 <Label>Comercial *</Label>
-                <Select value={form.owner_id || ""} onValueChange={(v) => setForm({ ...form, owner_id: v })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* Próprio usuário logado sempre disponível */}
-                    {user && !users.filter(u => u.role === "commercial").find(u => u.id === user.id) && (
-                      <SelectItem value={user.id}>{user.name} (eu)</SelectItem>
-                    )}
-                    {users.filter(u => u.role === "commercial").map(u => (
-                      <SelectItem key={u.id} value={u.id}>{u.id === user?.id ? `${u.name} (eu)` : u.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {isLeader ? (
+                  <Select value={form.owner_id || ""} onValueChange={(v) => setForm({ ...form, owner_id: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {users.map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input value={user?.name || user?.email || ""} disabled />
+                )}
               </div>
             </div>
 

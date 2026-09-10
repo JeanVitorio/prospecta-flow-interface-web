@@ -34,8 +34,8 @@ export default function Login() {
         <div className="flex flex-col items-center gap-3 mb-8">
           <Logo size={56} />
           <div className="text-center">
-            <h1 className="font-display font-bold text-2xl">JVS Tech</h1>
-            <p className="text-sm text-muted-foreground">Entre para acessar a operação</p>
+            <h1 className="font-display font-bold text-2xl">Prospecta Flow Robot</h1>
+            <p className="text-sm text-muted-foreground">Entre para acompanhar seus bots</p>
           </div>
         </div>
 
