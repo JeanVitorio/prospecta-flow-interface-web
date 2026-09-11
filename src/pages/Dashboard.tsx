@@ -5,7 +5,6 @@ import {
   Activity,
   AlertTriangle,
   Bot,
-  Building2,
   CheckCircle2,
   MapPin,
   Play,
@@ -31,7 +30,10 @@ export default function Dashboard() {
     queryKey: ["bots", "recent-events", ids],
     queryFn: () => listRecentBotEvents(),
     enabled: Boolean(runtimes.length),
-    refetchInterval: 5_000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    retry: 1,
   });
   const leads = useQuery({
     queryKey: ["dashboard", "leads-count", user?.id],
@@ -42,7 +44,10 @@ export default function Dashboard() {
       if (error) throw error;
       return count ?? 0;
     },
-    refetchInterval: 10_000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    retry: 1,
   });
 
   const stats = useMemo(() => {
@@ -138,8 +143,9 @@ export default function Dashboard() {
                     <div className="min-w-0">
                       <p className="font-semibold truncate">{runtime.config.name}</p>
                       <p className="text-xs text-muted-foreground mt-1 truncate">
-                        <Building2 className="w-3 h-3 inline mr-1" />
-                        {state.empresa_atual || state.atividade_atual || "Aguardando"}
+                        <MapPin className="w-3 h-3 inline mr-1" />
+                        Cidade {current} de {total}
+                        {state.cidade_atual ? ` · ${state.cidade_atual}` : ""}
                       </p>
                     </div>
                     <Badge variant="outline">

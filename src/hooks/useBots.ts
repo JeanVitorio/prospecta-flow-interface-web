@@ -13,7 +13,10 @@ export function useBots() {
   return useQuery({
     queryKey: ["bots", "runtime"],
     queryFn: listBotRuntimes,
-    refetchInterval: 2_000,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    retry: 1,
   });
 }
 
@@ -22,7 +25,10 @@ export function useBotEvents(botId?: string) {
     queryKey: ["bots", botId, "events"],
     queryFn: () => listBotEvents(botId!, 50),
     enabled: Boolean(botId),
-    refetchInterval: 5_000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    retry: 1,
   });
 }
 
@@ -30,7 +36,10 @@ export function useOnlineRunners() {
   return useQuery({
     queryKey: ["bots", "runners"],
     queryFn: listOnlineRunners,
-    refetchInterval: 15_000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    retry: 1,
   });
 }
 

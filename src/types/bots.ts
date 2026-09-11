@@ -29,6 +29,7 @@ export interface BotState {
   empresa_atual?: string;
   item_atual?: number;
   total_itens?: number;
+  ultima_cidade_total_empresas?: number;
   ultima_empresa_verificada?: string;
   ultimo_resultado_verificacao?: string;
   ultimo_lead_incluido?: string;

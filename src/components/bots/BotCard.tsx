@@ -59,6 +59,9 @@ export function BotCard({
   const active = isBotActive(runtime);
   const cityIndex = Number(state.indice_cidade || 0);
   const cityTotal = Number(state.total_cidades || config.cities.length || 0);
+  const companiesFound = Number(
+    state.total_itens || state.ultima_cidade_total_empresas || 0,
+  );
   const progress = cityTotal ? Math.round((cityIndex / cityTotal) * 100) : 0;
 
   return (
@@ -96,18 +99,15 @@ export function BotCard({
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <MapPin className="w-3.5 h-3.5" /> Cidade atual
           </p>
-          <p className="font-medium mt-1 truncate">{state.cidade_atual || "—"}</p>
+          <p className="font-medium mt-1 truncate">
+            {state.cidade_atual || state.ultima_cidade || "—"}
+          </p>
         </div>
         <div className="rounded-lg bg-muted/40 p-3">
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Building2 className="w-3.5 h-3.5" /> Empresa atual
+            <Building2 className="w-3.5 h-3.5" /> Empresas encontradas
           </p>
-          <p className="font-medium mt-1 truncate">
-            {state.empresa_atual || "—"}
-            {state.item_atual && state.total_itens
-              ? ` (${state.item_atual} de ${state.total_itens})`
-              : ""}
-          </p>
+          <p className="font-medium mt-1">{companiesFound}</p>
         </div>
       </div>
 
@@ -117,15 +117,12 @@ export function BotCard({
           {state.atividade_atual || "Aguardando execução"}
         </p>
         <p>
-          <span className="text-muted-foreground">Último lead coletado: </span>
-          {state.ultimo_lead_incluido || state.ultimo_lead_salvo || "—"}
+          <span className="text-muted-foreground">Resumo da cidade: </span>
+          {companiesFound} empresa(s) encontrada(s)
         </p>
         <p>
           <span className="text-muted-foreground">Importador: </span>
           {importerState.atividade_atual || importer?.status || "Aguardando"}
-          {importerState.ultimo_lead_importado
-            ? ` · ${importerState.ultimo_lead_importado}`
-            : ""}
         </p>
         <p className="text-xs text-muted-foreground">
           Executor: {state.executor?.id || runtime.runner?.name || "—"}
