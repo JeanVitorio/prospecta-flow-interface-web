@@ -22,7 +22,11 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { slugify } from "@/services/bots";
-import type { BotConfig, BotFormData } from "@/types/bots";
+import type {
+  BotConfig,
+  BotFormData,
+  BotPresenceFilter,
+} from "@/types/bots";
 
 interface BotFormDialogProps {
   open: boolean;
@@ -56,6 +60,13 @@ export function BotFormDialog({
   const [included, setIncluded] = useState("");
   const [excluded, setExcluded] = useState("");
   const [minReviews, setMinReviews] = useState(0);
+  const [minReviewsEnabled, setMinReviewsEnabled] = useState(true);
+  const [websiteFilter, setWebsiteFilter] =
+    useState<BotPresenceFilter>("without");
+  const [phoneFilter, setPhoneFilter] =
+    useState<BotPresenceFilter>("any");
+  const [includedEnabled, setIncludedEnabled] = useState(true);
+  const [excludedEnabled, setExcludedEnabled] = useState(true);
   const [ticket, setTicket] = useState(0);
   const [maxScrolls, setMaxScrolls] = useState(10);
   const [headless, setHeadless] = useState(true);
@@ -71,6 +82,11 @@ export function BotFormDialog({
     setIncluded((current?.included_words ?? []).join("\n"));
     setExcluded((current?.excluded_words ?? []).join("\n"));
     setMinReviews(current?.min_reviews ?? 0);
+    setMinReviewsEnabled(current?.min_reviews_enabled ?? true);
+    setWebsiteFilter(current?.website_filter ?? "without");
+    setPhoneFilter(current?.phone_filter ?? "any");
+    setIncludedEnabled(current?.included_words_enabled ?? true);
+    setExcludedEnabled(current?.excluded_words_enabled ?? true);
     setTicket(Number(current?.estimated_ticket ?? 0));
     setMaxScrolls(current?.max_scrolls ?? 10);
     setHeadless(current?.headless ?? true);
@@ -92,11 +108,16 @@ export function BotFormDialog({
       niche: niche.trim(),
       cities: cityList,
       min_reviews: Math.max(0, minReviews),
+      min_reviews_enabled: minReviewsEnabled,
       estimated_ticket: Math.max(0, ticket),
+      website_filter: websiteFilter,
+      phone_filter: phoneFilter,
       headless,
       max_scrolls: Math.max(1, maxScrolls),
       excluded_words: lines(excluded),
+      excluded_words_enabled: excludedEnabled,
       included_words: lines(included),
+      included_words_enabled: includedEnabled,
     });
   }
 
@@ -160,13 +181,52 @@ export function BotFormDialog({
             />
           </div>
           <div>
-            <Label>Mínimo de avaliações</Label>
+            <div className="flex items-center justify-between gap-3">
+              <Label>Mínimo de avaliações</Label>
+              <Switch
+                checked={minReviewsEnabled}
+                onCheckedChange={setMinReviewsEnabled}
+              />
+            </div>
             <Input
               type="number"
               min={0}
               value={minReviews}
+              disabled={!minReviewsEnabled}
               onChange={(event) => setMinReviews(Number(event.target.value))}
             />
+          </div>
+          <div>
+            <Label>Empresas por presença de site</Label>
+            <Select
+              value={websiteFilter}
+              onValueChange={(value: BotPresenceFilter) =>
+                setWebsiteFilter(value)
+              }
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Com ou sem site</SelectItem>
+                <SelectItem value="with">Somente com site</SelectItem>
+                <SelectItem value="without">Somente sem site</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Empresas por presença de telefone</Label>
+            <Select
+              value={phoneFilter}
+              onValueChange={(value: BotPresenceFilter) =>
+                setPhoneFilter(value)
+              }
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Com ou sem telefone</SelectItem>
+                <SelectItem value="with">Somente com telefone</SelectItem>
+                <SelectItem value="without">Somente sem telefone</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label>Máximo de rolagens</Label>
@@ -186,12 +246,34 @@ export function BotFormDialog({
             <Textarea rows={5} value={cities} onChange={(e) => setCities(e.target.value)} />
           </div>
           <div>
-            <Label>Palavras incluídas</Label>
-            <Textarea rows={4} value={included} onChange={(e) => setIncluded(e.target.value)} />
+            <div className="flex items-center justify-between gap-3">
+              <Label>Palavras incluídas</Label>
+              <Switch
+                checked={includedEnabled}
+                onCheckedChange={setIncludedEnabled}
+              />
+            </div>
+            <Textarea
+              rows={4}
+              value={included}
+              disabled={!includedEnabled}
+              onChange={(e) => setIncluded(e.target.value)}
+            />
           </div>
           <div>
-            <Label>Palavras excluídas</Label>
-            <Textarea rows={4} value={excluded} onChange={(e) => setExcluded(e.target.value)} />
+            <div className="flex items-center justify-between gap-3">
+              <Label>Palavras excluídas</Label>
+              <Switch
+                checked={excludedEnabled}
+                onCheckedChange={setExcludedEnabled}
+              />
+            </div>
+            <Textarea
+              rows={4}
+              value={excluded}
+              disabled={!excludedEnabled}
+              onChange={(e) => setExcluded(e.target.value)}
+            />
           </div>
         </div>
 

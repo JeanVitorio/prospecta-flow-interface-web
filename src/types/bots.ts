@@ -1,3 +1,5 @@
+export type BotPresenceFilter = "any" | "with" | "without";
+
 export interface BotConfig {
   id: string;
   slug: string;
@@ -8,11 +10,16 @@ export interface BotConfig {
   niche: string;
   cities: string[];
   min_reviews: number;
+  min_reviews_enabled: boolean;
   estimated_ticket: number;
+  website_filter: BotPresenceFilter;
+  phone_filter: BotPresenceFilter;
   headless: boolean;
   max_scrolls: number;
   excluded_words: string[];
+  excluded_words_enabled: boolean;
   included_words: string[];
+  included_words_enabled: boolean;
   version: number;
   created_at: string;
   updated_at: string;
