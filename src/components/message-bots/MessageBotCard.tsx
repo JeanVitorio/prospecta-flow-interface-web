@@ -6,6 +6,7 @@ import {
   Play,
   RotateCcw,
   Square,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ interface Props {
   onStart: () => void;
   onCommand: (command: MessageBotCommand) => void;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
 const statusLabels: Record<string, string> = {
@@ -42,6 +44,7 @@ export function MessageBotCard({
   onStart,
   onCommand,
   onEdit,
+  onDelete,
 }: Props) {
   const { config, session, runtime, control } = item;
   const status = runtime?.status ?? "idle";
@@ -147,6 +150,15 @@ export function MessageBotCard({
         </Button>
         <Button size="sm" variant="ghost" onClick={onEdit} disabled={active}>
           <Pencil className="w-3.5 h-3.5 mr-1" /> Editar
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-destructive hover:text-destructive"
+          onClick={onDelete}
+          disabled={active || busy}
+        >
+          <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir
         </Button>
         <Badge variant="secondary" className="ml-auto">
           <MessageCircle className="w-3 h-3 mr-1" /> WhatsApp Web

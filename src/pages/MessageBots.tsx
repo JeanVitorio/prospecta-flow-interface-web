@@ -78,10 +78,10 @@ export default function MessageBots() {
     }
   }
 
-  async function remove() {
-    if (!editing || !confirm(`Excluir o bot "${editing.name}"?`)) return;
+  async function remove(config: MessageBotConfig) {
+    if (!confirm(`Excluir o bot "${config.name}"?`)) return;
     try {
-      await actions.remove.mutateAsync(editing);
+      await actions.remove.mutateAsync(config);
       toast.success("Bot excluído.");
       setFormOpen(false);
       setEditing(undefined);
@@ -161,6 +161,7 @@ export default function MessageBots() {
                 setOwnerId(item.config.lead_owner_id);
                 setFormOpen(true);
               }}
+              onDelete={() => remove(item.config)}
             />
           ))}
         </div>
@@ -181,7 +182,7 @@ export default function MessageBots() {
           if (!open) setEditing(undefined);
         }}
         onSave={save}
-        onDelete={editing ? remove : undefined}
+        onDelete={editing ? () => remove(editing) : undefined}
       />
 
       <Dialog open={Boolean(starting)} onOpenChange={(open) => !open && setStarting(null)}>
