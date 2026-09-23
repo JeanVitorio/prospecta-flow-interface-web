@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { Bot, Database, LayoutDashboard, LogOut, Menu, Moon, Sun, Target, UserCircle2, Users } from "lucide-react";
+import { Bot, Database, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, Sun, Target, UserCircle2, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/Logo";
@@ -17,6 +17,7 @@ type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean };
 const nav: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/bots", label: "Bots", icon: Bot },
+  { to: "/message-bots", label: "Bots de WhatsApp", icon: MessageCircle },
   { to: "/sales", label: "Funil de Vendas", icon: Target },
   { to: "/leads", label: "Leads", icon: Users },
 ];

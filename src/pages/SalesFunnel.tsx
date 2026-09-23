@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,7 +20,7 @@ import { PeriodFilter, type Period, inPeriod } from "@/components/PeriodFilter";
 const BRL = (v: number) => `R$ ${(v ?? 0).toLocaleString("pt-BR")}`;
 
 interface Stage { id: string; name: string; color: string; position: number; is_won: boolean; is_lost: boolean; }
-interface Lead { id: string; name: string; company: string | null; email: string | null; instagram?: string | null; phone: string | null; whatsapp: string | null; source: string | null; niche?: string | null; estimated_value: number | null; stage_id: string | null; owner_id: string | null; notes: string | null; next_followup_at: string | null; created_at?: string; updated_at?: string; time_spent_seconds?: number | null; }
+interface Lead { id: string; name: string; company: string | null; email: string | null; instagram?: string | null; phone: string | null; whatsapp: string | null; whatsapp_do_not_contact?: boolean; source: string | null; niche?: string | null; estimated_value: number | null; stage_id: string | null; owner_id: string | null; notes: string | null; next_followup_at: string | null; created_at?: string; updated_at?: string; time_spent_seconds?: number | null; }
 interface Activity { id: string; lead_id: string; kind: string; body: string | null; occurred_at: string; user_id: string | null; }
 
 function whatsLink(n?: string | null) { if (!n) return null; const digits = n.replace(/\D/g, ""); return digits ? `https://wa.me/${digits}` : null; }
@@ -167,6 +168,7 @@ export default function SalesFunnel() {
       instagram: leadDraft.instagram?.trim() || null,
       phone: leadDraft.phone?.trim() || null,
       whatsapp: leadDraft.whatsapp?.trim() || null,
+      whatsapp_do_not_contact: !!leadDraft.whatsapp_do_not_contact,
       source: leadDraft.source?.trim() || null,
       niche: leadDraft.niche?.trim() || null,
       estimated_value: Number(leadDraft.estimated_value || 0),
@@ -257,6 +259,10 @@ export default function SalesFunnel() {
                   <div><Label>WhatsApp</Label><Input placeholder="55119..." value={form.whatsapp ?? ""} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} /></div>
                   <div><Label>Telefone</Label><Input value={form.phone ?? ""} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
                 </div>
+                <div className="flex items-center gap-3">
+                  <Switch checked={!!form.whatsapp_do_not_contact} onCheckedChange={value => setForm(f => ({ ...f, whatsapp_do_not_contact: value }))} />
+                  <Label>Não contatar este lead pelo WhatsApp</Label>
+                </div>
                 <div><Label>Instagram</Label><Input value={form.instagram ?? ""} placeholder="@perfil ou link" onChange={e => setForm(f => ({ ...f, instagram: e.target.value }))} /></div>
                 <div className="grid grid-cols-2 gap-2">
                   <div><Label>Origem</Label><Input value={form.source ?? ""} onChange={e => setForm(f => ({ ...f, source: e.target.value }))} /></div>
@@ -342,6 +348,10 @@ export default function SalesFunnel() {
                 <div><Label>Instagram</Label><Input value={leadDraft.instagram ?? ""} placeholder="@perfil ou link" onChange={e => setLeadDraft(f => ({ ...f, instagram: e.target.value }))} /></div>
                 <div><Label>WhatsApp</Label><Input value={leadDraft.whatsapp ?? ""} onChange={e => setLeadDraft(f => ({ ...f, whatsapp: e.target.value }))} /></div>
                 <div><Label>Telefone</Label><Input value={leadDraft.phone ?? ""} onChange={e => setLeadDraft(f => ({ ...f, phone: e.target.value }))} /></div>
+                <div className="col-span-2 flex items-center gap-3">
+                  <Switch checked={!!leadDraft.whatsapp_do_not_contact} onCheckedChange={value => setLeadDraft(f => ({ ...f, whatsapp_do_not_contact: value }))} />
+                  <Label>Não contatar este lead pelo WhatsApp</Label>
+                </div>
                 <div><Label>Ticket estimado</Label><Input type="number" value={leadDraft.estimated_value ?? 0} onChange={e => setLeadDraft(f => ({ ...f, estimated_value: Number(e.target.value) }))} /></div>
                 <div><Label>Origem</Label><Input value={leadDraft.source ?? ""} onChange={e => setLeadDraft(f => ({ ...f, source: e.target.value }))} /></div>
                 <div><Label>Tempo gasto (min)</Label><Input type="number" value={Math.round((leadDraft.time_spent_seconds ?? 0) / 60)} onChange={e => setLeadDraft(f => ({ ...f, time_spent_seconds: Number(e.target.value) * 60 }))} /></div>

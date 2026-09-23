@@ -11,6 +11,7 @@ import { NotificationsProvider } from "@/context/NotificationsContext";
 import { SearchProvider } from "@/context/SearchContext";
 import Dashboard from "./pages/Dashboard";
 import Bots from "./pages/Bots";
+import MessageBots from "./pages/MessageBots";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import SalesFunnel from "./pages/SalesFunnel";
@@ -47,6 +48,7 @@ const App = () => (
                     <Route element={<Protected><AppLayout /></Protected>}>
                       <Route path="/" element={<HomeRoute />} />
                       <Route path="/bots" element={<Bots />} />
+                      <Route path="/message-bots" element={<MessageBots />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/sales" element={<SalesFunnel />} />
                       <Route path="/leads" element={<Leads />} />

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Edit2, Phone, Mail, Building, Target, DollarSign } from "lucide-react";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ interface Lead {
   email?: string;
   phone?: string;
   whatsapp?: string;
+  whatsapp_do_not_contact?: boolean;
   source?: string;
   estimated_value?: number;
   stage_id?: string;
@@ -60,6 +62,7 @@ export default function Leads() {
     email: "",
     phone: "",
     whatsapp: "",
+    whatsapp_do_not_contact: false,
     source: "",
     estimated_value: 0,
     stage_id: "",
@@ -125,6 +128,7 @@ export default function Leads() {
       email: "",
       phone: "",
       whatsapp: "",
+      whatsapp_do_not_contact: false,
       source: "",
       estimated_value: 0,
       stage_id: stages[0]?.id || "",
@@ -152,6 +156,7 @@ export default function Leads() {
         email: form.email?.trim() || null,
         phone: form.phone?.trim() || null,
         whatsapp: form.whatsapp?.trim() || null,
+        whatsapp_do_not_contact: !!form.whatsapp_do_not_contact,
         source: form.source?.trim() || null,
         estimated_value: form.estimated_value || 0,
         stage_id: form.stage_id,
@@ -372,6 +377,16 @@ export default function Leads() {
                   placeholder="(11) 9999-9999"
                 />
               </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={!!form.whatsapp_do_not_contact}
+                onCheckedChange={(value) =>
+                  setForm({ ...form, whatsapp_do_not_contact: value })
+                }
+              />
+              <Label>Não contatar este lead pelo WhatsApp</Label>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

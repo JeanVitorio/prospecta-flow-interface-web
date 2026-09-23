@@ -448,6 +448,7 @@ export type Database = {
           estimated_value: number | null
           id: string
           name: string
+          niche: string | null
           next_followup_at: string | null
           notes: string | null
           owner_id: string | null
@@ -456,6 +457,7 @@ export type Database = {
           stage_id: string | null
           updated_at: string
           whatsapp: string | null
+          whatsapp_do_not_contact: boolean
         }
         Insert: {
           company?: string | null
@@ -464,6 +466,7 @@ export type Database = {
           estimated_value?: number | null
           id?: string
           name: string
+          niche?: string | null
           next_followup_at?: string | null
           notes?: string | null
           owner_id?: string | null
@@ -472,6 +475,7 @@ export type Database = {
           stage_id?: string | null
           updated_at?: string
           whatsapp?: string | null
+          whatsapp_do_not_contact?: boolean
         }
         Update: {
           company?: string | null
@@ -480,6 +484,7 @@ export type Database = {
           estimated_value?: number | null
           id?: string
           name?: string
+          niche?: string | null
           next_followup_at?: string | null
           notes?: string | null
           owner_id?: string | null
@@ -488,6 +493,7 @@ export type Database = {
           stage_id?: string | null
           updated_at?: string
           whatsapp?: string | null
+          whatsapp_do_not_contact?: boolean
         }
         Relationships: [
           {
