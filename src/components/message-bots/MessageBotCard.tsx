@@ -113,6 +113,17 @@ export function MessageBotCard({
         </div>
       )}
 
+      {session.status !== "ready" && !session.qr_code_data_url && (
+        <div className="rounded-lg border bg-muted/20 p-4 text-center">
+          <p className="text-sm font-medium mb-3">WhatsApp não conectado</p>
+          <img
+            src="/loboNoAprove.png"
+            alt="Bot não conectado ao WhatsApp"
+            className="max-h-64 w-full object-contain mx-auto"
+          />
+        </div>
+      )}
+
       <div className="space-y-1 text-sm">
         <p className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-muted-foreground" />
