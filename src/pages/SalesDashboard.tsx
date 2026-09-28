@@ -8,9 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Target, TrendingUp, CheckCircle2, Calendar, MessageCircle } from "lucide-react";
 import { PeriodFilter, type Period, inPeriod } from "@/components/PeriodFilter";
+import { whatsappWebLink } from "@/lib/whatsapp";
 
 const BRL = (v: number) => `R$ ${(v ?? 0).toLocaleString("pt-BR")}`;
-function waLink(n?: string | null) { if (!n) return null; const d = n.replace(/\D/g, ""); return d ? `https://wa.me/${d}` : null; }
 
 export default function SalesDashboard() {
   const { user } = useAuth();
@@ -83,7 +83,10 @@ export default function SalesDashboard() {
           <div className="space-y-2">
             {upcomingFollowups.length === 0 && <p className="text-sm text-muted-foreground">Sem follow-ups agendados</p>}
             {upcomingFollowups.map(l => {
-              const wa = waLink(l.whatsapp || l.phone);
+              const wa = whatsappWebLink(
+                l.whatsapp || l.phone,
+                l.first_contact_message,
+              );
               return (
                 <div key={l.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                   <div className="min-w-0">

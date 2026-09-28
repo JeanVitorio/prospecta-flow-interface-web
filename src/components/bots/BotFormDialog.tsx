@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { DEFAULT_FIRST_CONTACT_MESSAGE } from "@/lib/whatsapp";
 import { slugify } from "@/services/bots";
 import type {
   BotConfig,
@@ -56,6 +57,9 @@ export function BotFormDialog({
   const [ownerId, setOwnerId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [niche, setNiche] = useState("");
+  const [initialMessage, setInitialMessage] = useState(
+    DEFAULT_FIRST_CONTACT_MESSAGE,
+  );
   const [cities, setCities] = useState("");
   const [included, setIncluded] = useState("");
   const [excluded, setExcluded] = useState("");
@@ -78,6 +82,9 @@ export function BotFormDialog({
     setOwnerId(current?.lead_owner_id ?? user?.id ?? "");
     setSearchTerm(current?.search_term ?? "");
     setNiche(current?.niche ?? "");
+    setInitialMessage(
+      current?.initial_message ?? DEFAULT_FIRST_CONTACT_MESSAGE,
+    );
     setCities((current?.cities ?? []).join("\n"));
     setIncluded((current?.included_words ?? []).join("\n"));
     setExcluded((current?.excluded_words ?? []).join("\n"));
@@ -96,7 +103,13 @@ export function BotFormDialog({
 
   function submit() {
     const cityList = lines(cities);
-    if (!name.trim() || !searchTerm.trim() || !niche.trim() || !cityList.length) {
+    if (
+      !name.trim() ||
+      !searchTerm.trim() ||
+      !niche.trim() ||
+      !initialMessage.trim() ||
+      !cityList.length
+    ) {
       return;
     }
     onSave({
@@ -106,6 +119,7 @@ export function BotFormDialog({
       owner_email: selectedOwner?.email || user?.email || "",
       search_term: searchTerm.trim(),
       niche: niche.trim(),
+      initial_message: initialMessage.trim(),
       cities: cityList,
       min_reviews: Math.max(0, minReviews),
       min_reviews_enabled: minReviewsEnabled,
@@ -169,6 +183,16 @@ export function BotFormDialog({
           <div>
             <Label>Nicho</Label>
             <Input value={niche} onChange={(event) => setNiche(event.target.value)} />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Mensagem inicial do WhatsApp</Label>
+            <Textarea
+              rows={3}
+              maxLength={1000}
+              value={initialMessage}
+              onChange={(event) => setInitialMessage(event.target.value)}
+              placeholder={DEFAULT_FIRST_CONTACT_MESSAGE}
+            />
           </div>
           <div>
             <Label>Ticket estimado</Label>

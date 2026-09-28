@@ -88,15 +88,12 @@ export async function saveBotConfig(
 }
 
 export async function deleteBotConfig(config: BotConfig): Promise<void> {
-  const { data, error } = await db
-    .from("prospecta_bot_configs")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", config.id)
-    .eq("version", config.version)
-    .select("id")
-    .maybeSingle();
+  const { data, error } = await db.rpc("prospecta_delete_bot_config", {
+    p_bot_id: config.id,
+    p_expected_version: config.version,
+  });
   if (error) throw error;
-  if (!data) throw new Error("O bot já foi alterado ou removido.");
+  if (data !== true) throw new Error("O bot já foi alterado ou removido.");
 }
 
 export function slugify(value: string): string {

@@ -11,10 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Edit2, Phone, Mail, Building, Target, DollarSign } from "lucide-react";
+import { Plus, Trash2, Edit2, Phone, Mail, Building, Target, DollarSign, MessageCircle, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/format";
+import { googleMapsLink } from "@/lib/googleMaps";
+import { whatsappWebLink } from "@/lib/whatsapp";
 
 interface Lead {
   id: string;
@@ -24,6 +26,8 @@ interface Lead {
   phone?: string;
   whatsapp?: string;
   whatsapp_do_not_contact?: boolean;
+  first_contact_message?: string;
+  google_maps_url?: string;
   source?: string;
   estimated_value?: number;
   stage_id?: string;
@@ -236,6 +240,11 @@ export default function Leads() {
           {filteredLeads.map(lead => {
             const owner = users.find(u => u.id === lead.owner_id);
             const can_edit = isLeader || lead.owner_id === user?.id;
+            const whatsappLink = whatsappWebLink(
+              lead.whatsapp || lead.phone,
+              lead.first_contact_message,
+            );
+            const mapsLink = googleMapsLink(lead.google_maps_url || lead.notes);
             return (
               <Card key={lead.id} className="p-4 hover:bg-muted/50 transition">
                 <div className="flex items-start justify-between gap-4">
@@ -290,6 +299,30 @@ export default function Leads() {
 
                   {can_edit && (
                     <div className="flex gap-2">
+                      {whatsappLink && (
+                        <Button
+                          asChild
+                          size="sm"
+                          variant="ghost"
+                          className="gap-1 text-success hover:text-success"
+                        >
+                          <a href={whatsappLink} target="_blank" rel="noreferrer">
+                            <MessageCircle className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {mapsLink && (
+                        <Button
+                          asChild
+                          size="sm"
+                          variant="ghost"
+                          className="gap-1 text-accent hover:text-accent"
+                        >
+                          <a href={mapsLink} target="_blank" rel="noreferrer">
+                            <MapPin className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"

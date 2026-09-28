@@ -446,6 +446,8 @@ export type Database = {
           created_at: string
           email: string | null
           estimated_value: number | null
+          first_contact_message: string
+          google_maps_url: string | null
           id: string
           name: string
           niche: string | null
@@ -464,6 +466,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           estimated_value?: number | null
+          first_contact_message?: string
+          google_maps_url?: string | null
           id?: string
           name: string
           niche?: string | null
@@ -482,6 +486,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           estimated_value?: number | null
+          first_contact_message?: string
+          google_maps_url?: string | null
           id?: string
           name?: string
           niche?: string | null

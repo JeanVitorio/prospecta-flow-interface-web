@@ -13,17 +13,18 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, MessageCircle, Instagram, Phone, Calendar, Trash2, Pencil, Save, Clock } from "lucide-react";
+import { Plus, MessageCircle, Instagram, Phone, Calendar, Trash2, Pencil, Save, Clock, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { PeriodFilter, type Period, inPeriod } from "@/components/PeriodFilter";
+import { googleMapsLink } from "@/lib/googleMaps";
+import { whatsappWebLink } from "@/lib/whatsapp";
 
 const BRL = (v: number) => `R$ ${(v ?? 0).toLocaleString("pt-BR")}`;
 
 interface Stage { id: string; name: string; color: string; position: number; is_won: boolean; is_lost: boolean; }
-interface Lead { id: string; name: string; company: string | null; email: string | null; instagram?: string | null; phone: string | null; whatsapp: string | null; whatsapp_do_not_contact?: boolean; source: string | null; niche?: string | null; estimated_value: number | null; stage_id: string | null; owner_id: string | null; notes: string | null; next_followup_at: string | null; created_at?: string; updated_at?: string; time_spent_seconds?: number | null; }
+interface Lead { id: string; name: string; company: string | null; email: string | null; instagram?: string | null; phone: string | null; whatsapp: string | null; whatsapp_do_not_contact?: boolean; first_contact_message?: string | null; google_maps_url?: string | null; source: string | null; niche?: string | null; estimated_value: number | null; stage_id: string | null; owner_id: string | null; notes: string | null; next_followup_at: string | null; created_at?: string; updated_at?: string; time_spent_seconds?: number | null; }
 interface Activity { id: string; lead_id: string; kind: string; body: string | null; occurred_at: string; user_id: string | null; }
 
-function whatsLink(n?: string | null) { if (!n) return null; const digits = n.replace(/\D/g, ""); return digits ? `https://wa.me/${digits}` : null; }
 function telLink(n?: string | null) { if (!n) return null; const digits = n.replace(/\D/g, ""); return digits ? `tel:${digits}` : null; }
 function instagramLink(n?: string | null) {
   if (!n) return null;
@@ -34,7 +35,11 @@ function instagramLink(n?: string | null) {
 function LeadCard({ lead, onClick }: { lead: Lead; onClick: () => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: lead.id });
   const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
-  const wa = whatsLink(lead.whatsapp || lead.phone);
+  const wa = whatsappWebLink(
+    lead.whatsapp || lead.phone,
+    lead.first_contact_message ?? undefined,
+  );
+  const maps = googleMapsLink(lead.google_maps_url || lead.notes);
   return (
     <div ref={setNodeRef} style={style} className={`bg-card border border-border rounded-lg p-3 space-y-2 ${isDragging ? "opacity-40" : ""} hover:border-accent/40 transition`}>
       <div {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing space-y-1">
@@ -49,6 +54,7 @@ function LeadCard({ lead, onClick }: { lead: Lead; onClick: () => void }) {
       </div>
       <div className="flex items-center gap-1 pt-1 border-t border-border">
         {wa && <a href={wa} target="_blank" rel="noreferrer" className="p-1.5 rounded hover:bg-success/15 text-success" title="WhatsApp"><MessageCircle className="w-3.5 h-3.5" /></a>}
+        {maps && <a href={maps} target="_blank" rel="noreferrer" className="p-1.5 rounded hover:bg-accent/15 text-accent" title="Google Maps"><MapPin className="w-3.5 h-3.5" /></a>}
         {instagramLink(lead.instagram) && <a href={instagramLink(lead.instagram)!} target="_blank" rel="noreferrer" className="p-1.5 rounded hover:bg-primary/15 text-primary" title="Instagram"><Instagram className="w-3.5 h-3.5" /></a>}
         {telLink(lead.phone) && <a href={telLink(lead.phone)!} className="p-1.5 rounded hover:bg-muted text-muted-foreground" title="Telefone"><Phone className="w-3.5 h-3.5" /></a>}
       </div>
@@ -127,6 +133,10 @@ export default function SalesFunnel() {
   const [openLead, setOpenLead] = useState<Lead | null>(null);
   const [leadDraft, setLeadDraft] = useState<Partial<Lead>>({});
   const [newActivity, setNewActivity] = useState<{ kind: string; body: string }>({ kind: "note", body: "" });
+  const leadDraftWhatsAppLink = whatsappWebLink(
+    leadDraft.whatsapp || leadDraft.phone,
+    leadDraft.first_contact_message ?? undefined,
+  );
 
   function openLeadDialog(lead: Lead) {
     setOpenLead(lead);
@@ -336,7 +346,7 @@ export default function SalesFunnel() {
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">{leadDraft.name || "Lead"}
-                  {whatsLink(leadDraft.whatsapp || leadDraft.phone) && <a target="_blank" rel="noreferrer" href={whatsLink(leadDraft.whatsapp || leadDraft.phone)!} className="text-success"><MessageCircle className="w-4 h-4" /></a>}
+                  {leadDraftWhatsAppLink && <a target="_blank" rel="noreferrer" href={leadDraftWhatsAppLink} className="text-success"><MessageCircle className="w-4 h-4" /></a>}
                   {instagramLink(leadDraft.instagram) && <a target="_blank" rel="noreferrer" href={instagramLink(leadDraft.instagram)!} className="text-primary"><Instagram className="w-4 h-4" /></a>}
                   {telLink(leadDraft.phone) && <a href={telLink(leadDraft.phone)!} className="text-muted-foreground"><Phone className="w-4 h-4" /></a>}
                 </DialogTitle>

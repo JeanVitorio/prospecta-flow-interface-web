@@ -8,6 +8,7 @@ export interface BotConfig {
   owner_email: string;
   search_term: string;
   niche: string;
+  initial_message: string;
   cities: string[];
   min_reviews: number;
   min_reviews_enabled: boolean;
