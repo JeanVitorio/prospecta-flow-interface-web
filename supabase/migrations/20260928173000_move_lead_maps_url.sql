@@ -55,35 +55,6 @@ for each row execute function public.prospecta_move_lead_maps_note();
 revoke all on function public.prospecta_move_lead_maps_note()
   from public, anon, authenticated;
 
-create or replace function public.prospecta_delete_bot_config(
-  p_bot_id uuid,
-  p_expected_version bigint
-)
-returns boolean
-language plpgsql
-security definer
-set search_path = pg_catalog, public
-as $$
-begin
-  if not public.prospecta_can_access_bot(p_bot_id) then
-    raise exception 'Acesso negado ao bot' using errcode = '42501';
-  end if;
-
-  update public.prospecta_bot_configs
-  set deleted_at = clock_timestamp()
-  where id = p_bot_id
-    and version = p_expected_version
-    and deleted_at is null;
-
-  return found;
-end;
-$$;
-
-revoke all on function public.prospecta_delete_bot_config(uuid, bigint)
-  from public, anon, authenticated;
-grant execute on function public.prospecta_delete_bot_config(uuid, bigint)
-  to service_role, authenticated;
-
 notify pgrst, 'reload schema';
 
 commit;
