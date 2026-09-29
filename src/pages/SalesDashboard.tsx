@@ -46,9 +46,14 @@ export default function SalesDashboard() {
     return () => { supabase.removeChannel(ch); };
   }, [user?.id, user?.role]);
 
-  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
-
-  const wonStage = stages.find(s => s.is_won);
+  const wonStage =
+    stages.find((stage) => stage.is_won) ??
+    stages.find(
+      (stage) =>
+        stage.name.trim().localeCompare("Vendido", "pt-BR", {
+          sensitivity: "base",
+        }) === 0,
+    );
   const lostStage = stages.find(s => s.is_lost);
   const openLeads = leads.filter(l => l.stage_id !== wonStage?.id && l.stage_id !== lostStage?.id);
   const pipelineValue = openLeads.reduce((s, l) => s + Number(l.estimated_value || 0), 0);

@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { NotificationsProvider } from "@/context/NotificationsContext";
 import { SearchProvider } from "@/context/SearchContext";
 import Dashboard from "./pages/Dashboard";
+import SalesDashboard from "./pages/SalesDashboard";
 import Bots from "./pages/Bots";
 import MessageBots from "./pages/MessageBots";
 import Login from "./pages/Login";
@@ -29,7 +30,8 @@ function Protected({ children }: { children: ReactNode }) {
 }
 
 function HomeRoute() {
-  return <Dashboard />;
+  const { user } = useAuth();
+  return user?.role === "commercial" ? <SalesDashboard /> : <Dashboard />;
 }
 
 const App = () => (

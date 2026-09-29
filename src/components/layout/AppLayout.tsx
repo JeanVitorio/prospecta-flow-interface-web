@@ -16,9 +16,9 @@ type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean };
 
 const nav: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/sales", label: "Funil de Vendas", icon: Target },
   { to: "/bots", label: "Bots", icon: Bot },
   { to: "/message-bots", label: "Bots de WhatsApp", icon: MessageCircle },
-  { to: "/sales", label: "Funil de Vendas", icon: Target },
   { to: "/leads", label: "Leads", icon: Users },
 ];
 
