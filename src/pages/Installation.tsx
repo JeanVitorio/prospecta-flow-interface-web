@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   CheckCircle2,
   Download,
@@ -7,6 +8,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -14,6 +16,8 @@ const appDownloadUrl =
   "https://github.com/JeanVitorio/prospecta-flow-robot/releases/latest/download/ProspectaFlowSetup.exe";
 const releaseUrl =
   "https://github.com/JeanVitorio/prospecta-flow-robot/releases/latest";
+const releaseApiUrl =
+  "https://api.github.com/repos/JeanVitorio/prospecta-flow-robot/releases/latest";
 
 const steps = [
   {
@@ -31,6 +35,25 @@ const steps = [
 ];
 
 export default function Installation() {
+  const [appVersion, setAppVersion] = useState("v1.0.2");
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(releaseApiUrl, {
+      headers: { Accept: "application/vnd.github+json" },
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("Não foi possível consultar a versão.");
+        return response.json() as Promise<{ tag_name?: string }>;
+      })
+      .then((release) => {
+        if (release.tag_name) setAppVersion(release.tag_name);
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6">
       <PageHeader
@@ -49,6 +72,9 @@ export default function Installation() {
               <div>
                 <h2 className="font-display text-2xl font-bold">Prospecta Flow para Windows</h2>
                 <p className="text-sm text-muted-foreground">Instalador completo para Windows 10 e 11 — 64 bits</p>
+                <Badge variant="outline" className="mt-2 border-accent/40 text-accent">
+                  Versão atual: {appVersion}
+                </Badge>
               </div>
             </div>
 
@@ -98,7 +124,7 @@ export default function Installation() {
         </div>
         <Button asChild variant="outline" className="gap-2 shrink-0">
           <a href={releaseUrl} target="_blank" rel="noreferrer">
-            Ver versão publicada
+            Ver versão {appVersion}
             <ExternalLink className="w-4 h-4" />
           </a>
         </Button>
