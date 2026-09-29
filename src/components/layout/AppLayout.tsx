@@ -21,9 +21,8 @@ const nav: NavItem[] = [
   { to: "/bots", label: "Bots", icon: Bot },
   { to: "/message-bots", label: "Bots de WhatsApp", icon: MessageCircle },
   { to: "/leads", label: "Leads", icon: Users },
+  { to: "/installation", label: "Instalação", icon: Download },
 ];
-const appDownloadUrl =
-  "https://github.com/JeanVitorio/prospecta-flow-robot/releases/latest/download/ProspectaFlowSetup.exe";
 
 export function AppLayout() {
   const { theme, toggle } = useTheme();
@@ -61,13 +60,6 @@ export function AppLayout() {
               {label}
             </NavLink>
           ))}
-          <a
-            href={appDownloadUrl}
-            className="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-          >
-            <Download className="w-4 h-4 shrink-0" />
-            Baixar aplicativo
-          </a>
         </nav>
 
         <div className="mt-auto pt-4 border-t border-sidebar-border">

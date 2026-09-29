@@ -17,6 +17,7 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import SalesFunnel from "./pages/SalesFunnel";
 import Leads from "./pages/Leads";
+import Installation from "./pages/Installation";
 import NotFound from "./pages/NotFound.tsx";
 import type { ReactNode } from "react";
 
@@ -50,6 +51,7 @@ const App = () => (
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/sales" element={<SalesFunnel />} />
                       <Route path="/leads" element={<Leads />} />
+                      <Route path="/installation" element={<Installation />} />
                     </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>
