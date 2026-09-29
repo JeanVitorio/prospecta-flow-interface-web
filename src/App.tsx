@@ -29,11 +29,6 @@ function Protected({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-function HomeRoute() {
-  const { user } = useAuth();
-  return user?.role === "commercial" ? <SalesDashboard /> : <Dashboard />;
-}
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
@@ -48,7 +43,8 @@ const App = () => (
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route element={<Protected><AppLayout /></Protected>}>
-                      <Route path="/" element={<HomeRoute />} />
+                      <Route path="/" element={<SalesDashboard />} />
+                      <Route path="/dashboard-bots" element={<Dashboard />} />
                       <Route path="/bots" element={<Bots />} />
                       <Route path="/message-bots" element={<MessageBots />} />
                       <Route path="/profile" element={<Profile />} />

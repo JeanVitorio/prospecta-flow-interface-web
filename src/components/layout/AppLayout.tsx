@@ -15,7 +15,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean };
 
 const nav: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/", label: "Dashboard de Vendas", icon: LayoutDashboard, end: true },
+  { to: "/dashboard-bots", label: "Dashboard dos Bots", icon: Bot },
   { to: "/sales", label: "Funil de Vendas", icon: Target },
   { to: "/bots", label: "Bots", icon: Bot },
   { to: "/message-bots", label: "Bots de WhatsApp", icon: MessageCircle },
