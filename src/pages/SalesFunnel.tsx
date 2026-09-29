@@ -22,7 +22,7 @@ import { whatsappWebLink } from "@/lib/whatsapp";
 const BRL = (v: number) => `R$ ${(v ?? 0).toLocaleString("pt-BR")}`;
 
 interface Stage { id: string; name: string; color: string; position: number; is_won: boolean; is_lost: boolean; }
-interface Lead { id: string; name: string; company: string | null; email: string | null; instagram?: string | null; phone: string | null; whatsapp: string | null; whatsapp_do_not_contact?: boolean; first_contact_message?: string | null; google_maps_url?: string | null; source: string | null; niche?: string | null; estimated_value: number | null; stage_id: string | null; owner_id: string | null; notes: string | null; next_followup_at: string | null; created_at?: string; updated_at?: string; time_spent_seconds?: number | null; }
+interface Lead { id: string; name: string; company: string | null; city?: string | null; email: string | null; instagram?: string | null; phone: string | null; whatsapp: string | null; whatsapp_do_not_contact?: boolean; first_contact_message?: string | null; google_maps_url?: string | null; source: string | null; niche?: string | null; estimated_value: number | null; stage_id: string | null; owner_id: string | null; notes: string | null; next_followup_at: string | null; created_at?: string; updated_at?: string; time_spent_seconds?: number | null; }
 interface Activity { id: string; lead_id: string; kind: string; body: string | null; occurred_at: string; user_id: string | null; }
 
 function telLink(n?: string | null) { if (!n) return null; const digits = n.replace(/\D/g, ""); return digits ? `tel:${digits}` : null; }
@@ -82,6 +82,7 @@ function LeadCard({ lead, onClick }: { lead: Lead; onClick: () => void }) {
         </div>
         {lead.company && <p className="text-xs text-muted-foreground truncate">{lead.company}</p>}
         {lead.niche && <p className="text-[10px] text-muted-foreground truncate">{lead.niche}</p>}
+        {lead.city && <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1"><MapPin className="w-3 h-3 shrink-0" /> {lead.city}</p>}
         {lead.next_followup_at && <p className="text-[10px] text-warning flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(lead.next_followup_at).toLocaleDateString("pt-BR")}</p>}
         {!!lead.time_spent_seconds && <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {Math.round(lead.time_spent_seconds / 60)} min</p>}
       </div>
@@ -213,6 +214,7 @@ export default function SalesFunnel() {
     const payload = {
       ...form,
       name: form.name?.trim() || form.company?.trim() || form.email?.trim() || "Lead sem nome",
+      city: form.city?.trim() || null,
       stage_id: form.stage_id || firstStage?.id,
       owner_id: isLeader ? form.owner_id || user?.id : user?.id,
       estimated_value: Number(form.estimated_value || 0),
@@ -240,6 +242,7 @@ export default function SalesFunnel() {
     const payload = {
       name: leadDraft.name?.trim() || leadDraft.company?.trim() || "Lead sem nome",
       company: leadDraft.company?.trim() || null,
+      city: leadDraft.city?.trim() || null,
       instagram: leadDraft.instagram?.trim() || null,
       phone: leadDraft.phone?.trim() || null,
       whatsapp: leadDraft.whatsapp?.trim() || null,
@@ -330,6 +333,7 @@ export default function SalesFunnel() {
                 <div><Label>Nome</Label><Input value={form.name ?? ""} placeholder="Nome do lead (opcional)" onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
                 <div><Label>Empresa</Label><Input value={form.company ?? ""} onChange={e => setForm(f => ({ ...f, company: e.target.value }))} /></div>
                 <div><Label>Nicho / Segmento</Label><Input value={form.niche ?? ""} onChange={e => setForm(f => ({ ...f, niche: e.target.value }))} /></div>
+                <div><Label>Cidade</Label><Input value={form.city ?? ""} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} /></div>
                 <div className="grid grid-cols-2 gap-2">
                   <div><Label>WhatsApp</Label><Input placeholder="55119..." value={form.whatsapp ?? ""} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} /></div>
                   <div><Label>Telefone</Label><Input value={form.phone ?? ""} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
@@ -464,6 +468,7 @@ export default function SalesFunnel() {
                 <div><Label>Nome do lead</Label><Input value={leadDraft.name ?? ""} onChange={e => setLeadDraft(f => ({ ...f, name: e.target.value }))} /></div>
                 <div><Label>Empresa</Label><Input value={leadDraft.company ?? ""} onChange={e => setLeadDraft(f => ({ ...f, company: e.target.value }))} /></div>
                 <div><Label>Nicho / Segmento</Label><Input value={leadDraft.niche ?? ""} onChange={e => setLeadDraft(f => ({ ...f, niche: e.target.value }))} /></div>
+                <div><Label>Cidade</Label><Input value={leadDraft.city ?? ""} onChange={e => setLeadDraft(f => ({ ...f, city: e.target.value }))} /></div>
                 <div><Label>Instagram</Label><Input value={leadDraft.instagram ?? ""} placeholder="@perfil ou link" onChange={e => setLeadDraft(f => ({ ...f, instagram: e.target.value }))} /></div>
                 <div><Label>WhatsApp</Label><Input value={leadDraft.whatsapp ?? ""} onChange={e => setLeadDraft(f => ({ ...f, whatsapp: e.target.value }))} /></div>
                 <div><Label>Telefone</Label><Input value={leadDraft.phone ?? ""} onChange={e => setLeadDraft(f => ({ ...f, phone: e.target.value }))} /></div>

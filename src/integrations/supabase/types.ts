@@ -442,6 +442,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          city: string | null
           company: string | null
           created_at: string
           email: string | null
@@ -462,6 +463,7 @@ export type Database = {
           whatsapp_do_not_contact: boolean
         }
         Insert: {
+          city?: string | null
           company?: string | null
           created_at?: string
           email?: string | null
@@ -482,6 +484,7 @@ export type Database = {
           whatsapp_do_not_contact?: boolean
         }
         Update: {
+          city?: string | null
           company?: string | null
           created_at?: string
           email?: string | null
