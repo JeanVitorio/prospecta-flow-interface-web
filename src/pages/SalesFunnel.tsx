@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, MessageCircle, Instagram, Phone, Calendar, Trash2, Pencil, Save, Clock, MapPin } from "lucide-react";
+import { Plus, MessageCircle, Instagram, Phone, Calendar, Trash2, Pencil, Save, Clock, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
 import { PeriodFilter, type Period, inPeriod } from "@/components/PeriodFilter";
 import { googleMapsLink } from "@/lib/googleMaps";
@@ -30,6 +30,39 @@ function instagramLink(n?: string | null) {
   if (!n) return null;
   const handle = n.trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/$/, "");
   return handle ? `https://instagram.com/${handle}` : null;
+}
+
+function normalizeSearch(value?: string | null) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+function leadSearchScore(lead: Lead, search: string) {
+  const term = normalizeSearch(search);
+  const digits = search.replace(/\D/g, "");
+  if (!term && !digits) return 0;
+
+  const name = normalizeSearch(lead.name);
+  const company = normalizeSearch(lead.company);
+  if (name === term) return 0;
+  if (name.startsWith(term)) return 1;
+  if (name.includes(term)) return 2;
+  if (company.startsWith(term)) return 3;
+  if (company.includes(term)) return 4;
+
+  if (digits) {
+    const phones = [lead.phone, lead.whatsapp].map((value) =>
+      (value ?? "").replace(/\D/g, ""),
+    );
+    if (phones.some((phone) => phone.startsWith(digits))) return 1;
+    if (phones.some((phone) => phone.includes(digits))) return 2;
+  }
+
+  return -1;
 }
 
 function LeadCard({ lead, onClick }: { lead: Lead; onClick: () => void }) {
@@ -91,6 +124,9 @@ export default function SalesFunnel() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [ownerFilter, setOwnerFilter] = useState("mine");
   const [period, setPeriod] = useState<Period>({ preset: "all" });
+  const [search, setSearch] = useState("");
+  const [stageFilter, setStageFilter] = useState("all");
+  const [nicheFilter, setNicheFilter] = useState("all");
   const [stageForm, setStageForm] = useState<Partial<Stage> | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const isLeader = user?.role === "leader";
@@ -137,6 +173,35 @@ export default function SalesFunnel() {
     leadDraft.whatsapp || leadDraft.phone,
     leadDraft.first_contact_message ?? undefined,
   );
+  const nicheOptions = useMemo(
+    () =>
+      [...new Set(
+        leads
+          .map((lead) => lead.niche?.trim())
+          .filter((niche): niche is string => Boolean(niche)),
+      )].sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [leads],
+  );
+  const filteredLeads = useMemo(
+    () =>
+      leads
+        .map((lead) => ({ lead, score: leadSearchScore(lead, search) }))
+        .filter(
+          ({ lead, score }) =>
+            score >= 0 &&
+            (nicheFilter === "all" ||
+              normalizeSearch(lead.niche) === normalizeSearch(nicheFilter)) &&
+            (period.preset === "all" ||
+              inPeriod(lead.updated_at ?? lead.created_at, period)),
+        )
+        .sort((a, b) => a.score - b.score)
+        .map(({ lead }) => lead),
+    [leads, nicheFilter, period, search],
+  );
+  const visibleStages =
+    stageFilter === "all"
+      ? stages
+      : stages.filter((stage) => stage.id === stageFilter);
 
   function openLeadDialog(lead: Lead) {
     setOpenLead(lead);
@@ -310,11 +375,55 @@ export default function SalesFunnel() {
         }
       />
 
+      <Card className="mb-4 p-3">
+        <div className="grid gap-3 md:grid-cols-[minmax(260px,1fr)_220px_220px]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar por nome, telefone ou WhatsApp"
+              className="pl-9"
+            />
+          </div>
+          <Select value={stageFilter} onValueChange={setStageFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Coluna do funil" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as colunas</SelectItem>
+              {stages.map((stage) => (
+                <SelectItem key={stage.id} value={stage.id}>
+                  {stage.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={nicheFilter} onValueChange={setNicheFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Nicho" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os nichos</SelectItem>
+              {nicheOptions.map((niche) => (
+                <SelectItem key={niche} value={niche}>
+                  {niche}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
+
       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
         <div className="flex gap-3 overflow-x-auto pb-4 -mx-2 px-2">
-          {stages.map(s => (
+          {visibleStages.map(s => (
             <div key={s.id} className="relative group">
-              <StageColumn stage={s} leads={leads.filter(l => l.stage_id === s.id && (period.preset === "all" || inPeriod(l.updated_at ?? l.created_at, period)))} onCardClick={openLeadDialog} />
+              <StageColumn
+                stage={s}
+                leads={filteredLeads.filter((lead) => lead.stage_id === s.id)}
+                onCardClick={openLeadDialog}
+              />
               {isLeader && (
                 <div className="absolute top-2 right-2 hidden group-hover:flex gap-1">
                   {!s.is_won && <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setStageForm(s)}><Pencil className="w-3 h-3" /></Button>}
