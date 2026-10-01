@@ -83,19 +83,24 @@ Deno.serve(async (req) => {
     }
     const newUserId = created.user.id;
 
-    // Update profile with additional info
-    const { error: profileError } = await admin.from('profiles').update({
+    // O projeto não possui trigger de criação de profile para novos usuários.
+    // O upsert garante que toda conta do Auth também apareça nas telas da web.
+    const { error: profileError } = await admin.from('profiles').upsert({
+      id: newUserId,
+      email: email.trim().toLowerCase(),
       name,
-      position,
-      phone,
-      hourly_rate,
-      contract_start,
-      contract_end,
-    }).eq('id', newUserId);
+      position: position?.trim() || null,
+      phone: phone?.trim() || null,
+      hourly_rate: typeof hourly_rate === 'number' ? hourly_rate : null,
+      contract_start: contract_start || null,
+      contract_end: contract_end || null,
+      is_active: true,
+    }, { onConflict: 'id' });
 
     if (profileError) {
       console.error('Error updating profile:', profileError);
-      // Continue anyway, this is not critical
+      await admin.auth.admin.deleteUser(newUserId);
+      return json({ error: 'Falha ao criar o perfil do usuário' }, 500);
     }
 
     // Set role atomically: first delete any existing, then insert the chosen role
