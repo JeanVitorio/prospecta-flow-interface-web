@@ -5,6 +5,7 @@ import {
   ExternalLink,
   Monitor,
   PackageCheck,
+  RefreshCw,
   ShieldCheck,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -18,6 +19,22 @@ const releaseUrl =
   "https://github.com/JeanVitorio/prospecta-flow-robot/releases/latest";
 const releaseApiUrl =
   "https://api.github.com/repos/JeanVitorio/prospecta-flow-robot/releases/latest";
+
+interface NativeUpdateResponse {
+  status: "updated" | "installing" | "error";
+  version: string;
+  message: string;
+}
+
+declare global {
+  interface Window {
+    pywebview?: {
+      api?: {
+        buscar_e_instalar_atualizacao: () => Promise<NativeUpdateResponse>;
+      };
+    };
+  }
+}
 
 const steps = [
   {
@@ -36,6 +53,9 @@ const steps = [
 
 export default function Installation() {
   const [appVersion, setAppVersion] = useState("v1.0.2");
+  const [nativeUpdateAvailable, setNativeUpdateAvailable] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -53,6 +73,33 @@ export default function Installation() {
       .catch(() => undefined);
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    const detectNativeApi = () => {
+      setNativeUpdateAvailable(
+        typeof window.pywebview?.api?.buscar_e_instalar_atualizacao ===
+          "function",
+      );
+    };
+    detectNativeApi();
+    window.addEventListener("pywebviewready", detectNativeApi);
+    return () => window.removeEventListener("pywebviewready", detectNativeApi);
+  }, []);
+
+  async function updateInstalledApp() {
+    const update = window.pywebview?.api?.buscar_e_instalar_atualizacao;
+    if (!update) return;
+    setUpdating(true);
+    setUpdateMessage("Buscando e validando a versão mais recente...");
+    try {
+      const result = await update();
+      setUpdateMessage(result.message);
+    } catch {
+      setUpdateMessage("Não foi possível buscar ou instalar a atualização.");
+    } finally {
+      setUpdating(false);
+    }
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6">
@@ -94,13 +141,30 @@ export default function Installation() {
             </div>
           </div>
 
-          <Button asChild size="lg" className="gap-2 w-full lg:w-auto">
-            <a href={appDownloadUrl}>
-              <Download className="w-5 h-5" />
-              Baixar aplicativo
-            </a>
-          </Button>
+          {nativeUpdateAvailable ? (
+            <Button
+              size="lg"
+              className="gap-2 w-full lg:w-auto"
+              disabled={updating}
+              onClick={updateInstalledApp}
+            >
+              <RefreshCw className={`w-5 h-5 ${updating ? "animate-spin" : ""}`} />
+              {updating ? "Verificando..." : "Buscar atualização agora"}
+            </Button>
+          ) : (
+            <Button asChild size="lg" className="gap-2 w-full lg:w-auto">
+              <a href={appDownloadUrl}>
+                <Download className="w-5 h-5" />
+                Baixar aplicativo
+              </a>
+            </Button>
+          )}
         </div>
+        {updateMessage && (
+          <p className="relative mt-4 text-sm text-muted-foreground">
+            {updateMessage}
+          </p>
+        )}
       </Card>
 
       <div className="grid gap-4 md:grid-cols-3 mb-6">
