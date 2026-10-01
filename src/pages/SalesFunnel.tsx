@@ -239,6 +239,7 @@ export default function SalesFunnel() {
 
   async function saveLeadDraft() {
     if (!openLead) return;
+    const nextOwnerId = leadDraft.owner_id ?? null;
     const payload = {
       name: leadDraft.name?.trim() || leadDraft.company?.trim() || "Lead sem nome",
       company: leadDraft.company?.trim() || null,
@@ -251,16 +252,31 @@ export default function SalesFunnel() {
       niche: leadDraft.niche?.trim() || null,
       estimated_value: Number(leadDraft.estimated_value || 0),
       stage_id: leadDraft.stage_id ?? null,
-      owner_id: isLeader ? leadDraft.owner_id ?? null : user?.id ?? null,
+      owner_id: nextOwnerId,
       notes: leadDraft.notes?.trim() || null,
       next_followup_at: leadDraft.next_followup_at ?? null,
       time_spent_seconds: Number(leadDraft.time_spent_seconds || 0),
     };
-    const { data, error } = await supabase.from("leads").update(payload).eq("id", openLead.id).select().single();
+    const { error } = await supabase.from("leads").update(payload).eq("id", openLead.id);
     if (error) return toast.error(error.message);
-    setOpenLead(data as Lead);
-    setLeadDraft(data as Lead);
-    toast.success("Lead salvo");
+
+    const updatedLead = { ...openLead, ...payload } as Lead;
+    const ownerChanged = nextOwnerId !== openLead.owner_id;
+    const nextOwner = users.find((candidate) => candidate.id === nextOwnerId);
+
+    if (!isLeader && nextOwnerId !== user?.id) {
+      setOpenLead(null);
+      setLeadDraft({});
+    } else {
+      setOpenLead(updatedLead);
+      setLeadDraft(updatedLead);
+    }
+
+    toast.success(
+      ownerChanged && nextOwner
+        ? `Lead transferido para ${nextOwner.name}`
+        : "Lead salvo",
+    );
     load();
   }
   async function saveStage() {
@@ -480,6 +496,16 @@ export default function SalesFunnel() {
                 <div><Label>Origem</Label><Input value={leadDraft.source ?? ""} onChange={e => setLeadDraft(f => ({ ...f, source: e.target.value }))} /></div>
                 <div><Label>Tempo gasto (min)</Label><Input type="number" value={Math.round((leadDraft.time_spent_seconds ?? 0) / 60)} onChange={e => setLeadDraft(f => ({ ...f, time_spent_seconds: Number(e.target.value) * 60 }))} /></div>
                 <div><Label>Próximo follow-up</Label><Input type="datetime-local" value={leadDraft.next_followup_at ? leadDraft.next_followup_at.slice(0, 16) : ""} onChange={e => setLeadDraft(f => ({ ...f, next_followup_at: e.target.value ? new Date(e.target.value).toISOString() : null }))} /></div>
+                <div><Label>Comercial responsável</Label>
+                  <Select value={leadDraft.owner_id ?? ""} onValueChange={v => setLeadDraft(f => ({ ...f, owner_id: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Selecione um usuário" /></SelectTrigger>
+                    <SelectContent>
+                      {users.map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div><Label>Estágio</Label>
                   <Select value={leadDraft.stage_id ?? ""} onValueChange={v => setLeadDraft(f => ({ ...f, stage_id: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
