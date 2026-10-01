@@ -62,6 +62,19 @@ export async function saveBotConfig(
   form: BotFormData,
   current?: BotConfig,
 ): Promise<void> {
+  const includedWords = new Map(
+    form.included_words.map((item) => [normalizeFilterWord(item), item]),
+  );
+  const overlappingWord = form.excluded_words.find((item) =>
+    includedWords.has(normalizeFilterWord(item)),
+  );
+  if (overlappingWord) {
+    const word = includedWords.get(normalizeFilterWord(overlappingWord));
+    throw new Error(
+      `A palavra "${word}" não pode estar simultaneamente nos filtros de inclusão e exclusão.`,
+    );
+  }
+
   const payload = {
     ...form,
     slug: form.slug || slugify(form.name),
@@ -88,16 +101,16 @@ export async function saveBotConfig(
 }
 
 export async function deleteBotConfig(config: BotConfig): Promise<void> {
-  const { count, error } = await db
-    .from("prospecta_bot_configs")
-    .update(
-      { deleted_at: new Date().toISOString() },
-      { count: "exact" },
-    )
-    .eq("id", config.id)
-    .eq("version", config.version);
+  const { data, error } = await db.rpc("prospecta_delete_bot", {
+    p_bot_id: config.id,
+    p_expected_version: config.version,
+  });
   if (error) throw error;
-  if (count !== 1) throw new Error("O bot já foi alterado ou removido.");
+  if (!data?.length) throw new Error("O bot já foi alterado ou removido.");
+}
+
+function normalizeFilterWord(value: string): string {
+  return value.trim().toLocaleLowerCase("pt-BR");
 }
 
 export function slugify(value: string): string {
