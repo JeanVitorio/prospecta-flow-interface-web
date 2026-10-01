@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import SalesFunnel from "./pages/SalesFunnel";
 import Leads from "./pages/Leads";
 import Installation from "./pages/Installation";
+import Collaborators from "./pages/Collaborators";
 import NotFound from "./pages/NotFound.tsx";
 import type { ReactNode } from "react";
 
@@ -27,6 +28,14 @@ function Protected({ children }: { children: ReactNode }) {
   const { user, ready } = useAuth();
   if (!ready) return null;
   if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function LeaderOnly({ children }: { children: ReactNode }) {
+  const { user, ready } = useAuth();
+  if (!ready) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.is_leader) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -51,6 +60,10 @@ const App = () => (
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/sales" element={<SalesFunnel />} />
                       <Route path="/leads" element={<Leads />} />
+                      <Route
+                        path="/collaborators"
+                        element={<LeaderOnly><Collaborators /></LeaderOnly>}
+                      />
                       <Route path="/installation" element={<Installation />} />
                     </Route>
                     <Route path="*" element={<NotFound />} />

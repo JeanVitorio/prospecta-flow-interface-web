@@ -1,5 +1,10 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -25,7 +30,7 @@ Deno.serve(async (req) => {
       return json({ error: 'Sessão inválida ou expirada' }, 401);
     }
 
-    // Verify caller is leader or manager
+    // A criação de acessos é exclusiva de usuários com papel de líder.
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
     const { data: roles, error: rolesError } = await admin
       .from('user_roles')
@@ -37,9 +42,9 @@ Deno.serve(async (req) => {
       return json({ error: 'Erro ao verificar permissões' }, 500);
     }
 
-    const callerRoles = (roles ?? []).map((r: any) => r.role);
-    if (!callerRoles.includes('leader') && !callerRoles.includes('manager')) {
-      return json({ error: 'Sem permissão para criar usuários' }, 403);
+    const callerRoles = (roles ?? []).map((r: { role: string }) => r.role);
+    if (!callerRoles.includes('leader')) {
+      return json({ error: 'Apenas líderes podem criar usuários' }, 403);
     }
 
     const body = await req.json();
@@ -66,14 +71,9 @@ Deno.serve(async (req) => {
       return json({ error: 'Nível inválido' }, 400);
     }
 
-    // Only leader may create leaders/managers/commercial
-    if ((role === 'leader' || role === 'manager' || role === 'commercial') && !callerRoles.includes('leader')) {
-      return json({ error: 'Apenas líderes podem criar gerentes, líderes ou comerciais' }, 403);
-    }
-
     // Create auth user
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
-      email,
+      email: email.trim().toLowerCase(),
       password,
       email_confirm: true,
       user_metadata: { name },
@@ -115,6 +115,7 @@ Deno.serve(async (req) => {
 
     if (insertError) {
       console.error('Error inserting role:', insertError);
+      await admin.auth.admin.deleteUser(newUserId);
       return json({ error: 'Falha ao atribuir nível de acesso' }, 500);
     }
 
@@ -137,9 +138,11 @@ Deno.serve(async (req) => {
     }
 
     return json({ ok: true, user_id: newUserId });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Unexpected error in create-user:', e);
-    return json({ error: e?.message ?? 'Erro interno do servidor' }, 500);
+    return json({
+      error: e instanceof Error ? e.message : 'Erro interno do servidor',
+    }, 500);
   }
 });
 

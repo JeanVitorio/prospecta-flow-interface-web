@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { Bot, Database, Download, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, Sun, Target, UserCircle2, Users } from "lucide-react";
+import { Bot, Database, Download, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, Sun, Target, UserCircle2, UserRoundCog, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/Logo";
@@ -27,9 +27,16 @@ const nav: NavItem[] = [
 export function AppLayout() {
   const { theme, toggle } = useTheme();
   const { currentUser, usingBackend } = useApp();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const visibleNav = user?.is_leader
+    ? [
+        ...nav.slice(0, -1),
+        { to: "/collaborators", label: "Colaboradores", icon: UserRoundCog },
+        nav[nav.length - 1],
+      ]
+    : nav;
 
   const SidebarContent = (
     <>
@@ -42,7 +49,7 @@ export function AppLayout() {
         </div>
 
         <nav className="space-y-1 flex-1">
-          {nav.map(({ to, label, icon: Icon, end }) => (
+          {visibleNav.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}

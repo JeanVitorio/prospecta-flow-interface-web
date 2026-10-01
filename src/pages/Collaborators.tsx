@@ -17,8 +17,10 @@ type Profile = {
   position: string | null; phone: string | null; is_active: boolean;
   contract_start: string | null; contract_end: string | null;
 };
-type RoleRow = { user_id: string; role: "leader" | "manager" | "collaborator" | "commercial" };
+type Role = "leader" | "manager" | "collaborator" | "commercial";
+type RoleRow = { user_id: string; role: Role };
 type Team = { id: string; name: string };
+type FunctionResponse = { error?: string; ok?: boolean; user_id?: string };
 
 const ROLE_LABELS: Record<string, string> = {
   leader: "Líder",
@@ -36,7 +38,7 @@ export default function Collaborators() {
   const [open, setOpen] = useState(false);
   // Controle de edição de role inline
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
-  const [pendingRole, setPendingRole] = useState<"leader" | "manager" | "collaborator" | "commercial">("collaborator");
+  const [pendingRole, setPendingRole] = useState<Role>("collaborator");
   const [savingRole, setSavingRole] = useState(false);
 
   async function load() {
@@ -46,25 +48,27 @@ export default function Collaborators() {
       supabase.from("user_roles").select("user_id,role"),
       supabase.from("teams").select("id,name").order("name"),
     ]);
-    setProfiles((p as any) ?? []);
-    setRoles((r as any) ?? []);
-    setTeams((t as any) ?? []);
+    setProfiles((p ?? []) as Profile[]);
+    setRoles((r ?? []) as RoleRow[]);
+    setTeams((t ?? []) as Team[]);
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
 
-  const isAdmin = user?.is_manager || user?.is_leader;
   const isLeader = !!user?.is_leader;
 
   async function removeCollaborator(uid: string, name: string) {
     if (!confirm(`Remover ${name}? Esta ação é permanente.`)) return;
     const { data, error } = await supabase.functions.invoke("delete-user", { body: { user_id: uid } });
-    if (error || (data as any)?.error) return toast.error((data as any)?.error ?? error?.message ?? "Erro");
+    const response = data as FunctionResponse | null;
+    if (error || response?.error) {
+      return toast.error(response?.error ?? error?.message ?? "Erro");
+    }
     toast.success("Colaborador removido");
     load();
   }
 
-  function roleOf(uid: string): "leader" | "manager" | "collaborator" | "commercial" {
+  function roleOf(uid: string): Role {
     const rs = roles.filter(x => x.user_id === uid).map(x => x.role);
     if (rs.includes("leader")) return "leader";
     if (rs.includes("manager")) return "manager";
@@ -87,13 +91,13 @@ export default function Collaborators() {
       // Remove todas as roles existentes do usuário e insere a nova
       const { error: delErr } = await supabase.from("user_roles").delete().eq("user_id", uid);
       if (delErr) throw delErr;
-      const { error: insErr } = await supabase.from("user_roles").insert({ user_id: uid, role: pendingRole } as any);
+      const { error: insErr } = await supabase.from("user_roles").insert({ user_id: uid, role: pendingRole });
       if (insErr) throw insErr;
       toast.success(`Nível alterado para ${ROLE_LABELS[pendingRole]}`);
       setEditingRoleId(null);
       load();
-    } catch (err: any) {
-      toast.error(err.message ?? "Erro ao alterar nível");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erro ao alterar nível");
     } finally {
       setSavingRole(false);
     }
@@ -106,14 +110,14 @@ export default function Collaborators() {
           <h1 className="font-display font-bold text-2xl sm:text-3xl">Colaboradores</h1>
           <p className="text-sm text-muted-foreground">Gerencie sua equipe, cargos e contratos.</p>
         </div>
-        {isAdmin && (
+        {isLeader && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2 w-full sm:w-auto"><UserPlus className="w-4 h-4" /> Novo colaborador</Button>
             </DialogTrigger>
             <NewCollaboratorDialog
               teams={teams}
-              canCreateManagers={!!user?.is_leader}
+              canCreateManagers
               onCreated={() => { setOpen(false); load(); }}
             />
           </Dialog>
@@ -162,7 +166,7 @@ export default function Collaborators() {
                   {/* Editor inline de role */}
                   {isEditing && (
                     <div className="flex items-center gap-2 mt-1.5">
-                      <Select value={pendingRole} onValueChange={v => setPendingRole(v as any)} disabled={savingRole}>
+                      <Select value={pendingRole} onValueChange={v => setPendingRole(v as Role)} disabled={savingRole}>
                         <SelectTrigger className="h-7 text-xs w-32">
                           <SelectValue />
                         </SelectTrigger>
@@ -218,7 +222,7 @@ function NewCollaboratorDialog({
   const [password, setPassword] = useState("");
   const [position, setPosition] = useState("");
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState<"collaborator" | "manager" | "leader" | "commercial">("collaborator");
+  const [role, setRole] = useState<Role>("collaborator");
   const [teamIds, setTeamIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -258,13 +262,19 @@ function NewCollaboratorDialog({
 
       if (error) {
         console.error("Function invocation error:", error);
-        toast.error(error.message || "Erro ao criar colaborador");
+        let message = error.message || "Erro ao criar colaborador";
+        if ("context" in error && error.context instanceof Response) {
+          const response = await error.context.json().catch(() => null);
+          if (response?.error) message = response.error;
+        }
+        toast.error(message);
         return;
       }
 
-      if ((data as any)?.error) {
-        console.error("Function returned error:", (data as any).error);
-        toast.error((data as any).error);
+      const response = data as FunctionResponse | null;
+      if (response?.error) {
+        console.error("Function returned error:", response.error);
+        toast.error(response.error);
         return;
       }
 
@@ -278,9 +288,11 @@ function NewCollaboratorDialog({
       setRole("collaborator");
       setTeamIds([]);
       onCreated();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Unexpected error:", err);
-      toast.error(err?.message || "Erro inesperado ao criar colaborador");
+      toast.error(
+        err instanceof Error ? err.message : "Erro inesperado ao criar colaborador",
+      );
     } finally {
       setBusy(false);
     }
@@ -297,12 +309,12 @@ function NewCollaboratorDialog({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><Label>Nome*</Label><Input value={name} onChange={e => setName(e.target.value)} required disabled={busy} /></div>
           <div><Label>E-mail*</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} required disabled={busy} /></div>
-          <div><Label>Senha* (mín 6)</Label><Input type="text" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} disabled={busy} /></div>
+          <div><Label>Senha* (mín 6)</Label><Input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} disabled={busy} /></div>
           <div><Label>Cargo</Label><Input value={position} onChange={e => setPosition(e.target.value)} placeholder="Ex: Designer" disabled={busy} /></div>
           <div><Label>Telefone</Label><Input value={phone} onChange={e => setPhone(e.target.value)} disabled={busy} /></div>
           <div>
             <Label>Nível*</Label>
-            <Select value={role} onValueChange={v => setRole(v as any)} disabled={busy}>
+            <Select value={role} onValueChange={v => setRole(v as Role)} disabled={busy}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="collaborator">Colaborador</SelectItem>
